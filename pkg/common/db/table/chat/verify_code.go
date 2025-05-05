@@ -40,4 +40,5 @@ type VerifyCodeInterface interface {
 	TakeLast(ctx context.Context, account string) (*VerifyCode, error)
 	Incr(ctx context.Context, id string) error
 	Delete(ctx context.Context, id string) error
+	SetUsed(ctx context.Context, id string) error
 }

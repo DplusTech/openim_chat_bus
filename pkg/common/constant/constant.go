@@ -13,6 +13,7 @@ const (
 	VerificationCodeForRegister      = 1 // Register
 	VerificationCodeForResetPassword = 2 // Reset password
 	VerificationCodeForLogin         = 3 // Login
+	VerificationCodeForUpdateInfo    = 4 // Update user info
 )
 
 const LogFileName = "chat.log"

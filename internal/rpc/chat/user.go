@@ -37,7 +37,7 @@ import (
 	"github.com/openimsdk/tools/errs"
 )
 
-func (o *chatSvr) checkUpdateInfo(ctx context.Context, req *chat.UpdateUserInfoReq) error {
+func (o *chatSvr) checkUpdateInfo(ctx context.Context, req *chat.UpdateUserInfoReq, opUserID string, userType int) error {
 	if req.AreaCode != nil || req.PhoneNumber != nil {
 		if !(req.AreaCode != nil && req.PhoneNumber != nil) {
 			return errs.ErrArgs.WrapMsg("areaCode and phoneNumber must be set together")
@@ -157,7 +157,68 @@ func (o *chatSvr) UpdateUserInfo(ctx context.Context, req *chat.UpdateUserInfoRe
 		return nil, err
 	}
 
-	if err = o.checkUpdateInfo(ctx, req); err != nil {
+	/* // Temporarily disabled verification code check
+	// 检查是否需要验证码验证（当更新email或phoneNumber时）
+	if (req.Email != nil && req.Email.Value != "") || (req.PhoneNumber != nil && req.PhoneNumber.Value != "") {
+		// 检查新的邮箱是否已被注册
+		if req.Email != nil && req.Email.Value != "" {
+			attr, err := o.Database.TakeAttributeByEmail(ctx, req.Email.Value)
+			if err == nil && attr.UserID != req.UserID {
+				// 如果找到了记录且不属于当前用户，则说明邮箱已被注册
+				return nil, errs.ErrArgs.WrapMsg("email already registered by another user")
+			} else if err != nil && !dbutil.IsDBNotFound(err) {
+				// 如果是其他错误（不是"未找到"错误）
+				return nil, err
+			}
+		}
+		
+		// 检查新的手机号是否已被注册
+		if req.PhoneNumber != nil && req.PhoneNumber.Value != "" && req.AreaCode != nil && req.AreaCode.Value != "" {
+			attr, err := o.Database.TakeAttributeByPhone(ctx, req.AreaCode.Value, req.PhoneNumber.Value)
+			if err == nil && attr.UserID != req.UserID {
+				// 如果找到了记录且不属于当前用户，则说明手机号已被注册
+				return nil, errs.ErrArgs.WrapMsg("phone number already registered by another user")
+			} else if err != nil && !dbutil.IsDBNotFound(err) {
+				// 如果是其他错误（不是"未找到"错误）
+				return nil, err
+			}
+		}
+
+		// 如果没有提供验证码
+		if req.VerifyCode == nil || req.VerifyCode.Value == "" {
+			return nil, errs.ErrArgs.WrapMsg("verification code required for updating email or phone number")
+		}
+		
+		// 验证验证码
+		var verifyCodeID string
+		// 如果更新邮箱，验证邮箱验证码
+		if req.Email != nil && req.Email.Value != "" {
+			verifyCodeID, err = o.verifyCode(ctx, req.Email.Value, req.VerifyCode.Value, mail)
+			if err != nil {
+				return nil, err
+			}
+		}
+		
+		// 如果更新手机号，验证手机验证码
+		if req.PhoneNumber != nil && req.PhoneNumber.Value != "" {
+			account := o.verifyCodeJoin(req.AreaCode.Value, req.PhoneNumber.Value)
+			verifyCodeID, err = o.verifyCode(ctx, account, req.VerifyCode.Value, phone)
+			if err != nil {
+				return nil, err
+			}
+		}
+		
+		// 标记验证码为已使用
+		if verifyCodeID != "" {
+			if err := o.Database.UpdateVerifyCodeSetUsed(ctx, verifyCodeID); err != nil {
+				log.ZWarn(ctx, "update verify code used failed", err, "verifyCodeID", verifyCodeID)
+			}
+		}
+	}
+	*/
+
+	err = o.checkUpdateInfo(ctx, req, opUserID, int(userType))
+	if err != nil {
 		return nil, err
 	}
 
@@ -188,6 +249,7 @@ func (o *chatSvr) UpdateUserInfo(ctx context.Context, req *chat.UpdateUserInfoRe
 			return nil, err
 		}
 	}
+
 	return &chat.UpdateUserInfoResp{}, nil
 }
 

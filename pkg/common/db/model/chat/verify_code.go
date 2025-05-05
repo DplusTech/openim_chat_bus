@@ -143,3 +143,11 @@ func (o *VerifyCode) Delete(ctx context.Context, id string) error {
 	}
 	return mongoutil.DeleteOne(ctx, o.coll, bson.M{"_id": objID})
 }
+
+func (o *VerifyCode) SetUsed(ctx context.Context, id string) error {
+	objID, err := o.parseID(id)
+	if err != nil {
+		return err
+	}
+	return mongoutil.UpdateOne(ctx, o.coll, bson.M{"_id": objID}, bson.M{"$set": bson.M{"used": true}}, false)
+}

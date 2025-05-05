@@ -31,6 +31,19 @@ func (x *UpdateUserInfoReq) Check() error {
 		if err := EmailCheck(x.Email.Value); err != nil {
 			return err
 		}
+		// 临时注释掉验证码检查，与backend实现保持一致
+		// if x.VerifyCode == nil || x.VerifyCode.Value == "" {
+		// 	return errs.ErrArgs.WrapMsg("verification code required for updating email")
+		// }
+	}
+	if x.PhoneNumber != nil && x.PhoneNumber.Value != "" {
+		if x.AreaCode == nil || x.AreaCode.Value == "" {
+			return errs.ErrArgs.WrapMsg("area code is required for updating phone number")
+		}
+		// 临时注释掉验证码检查，与backend实现保持一致
+		// if x.VerifyCode == nil || x.VerifyCode.Value == "" {
+		// 	return errs.ErrArgs.WrapMsg("verification code required for updating phone number")
+		// }
 	}
 	return nil
 }
@@ -63,7 +76,7 @@ func (x *FindUserFullInfoReq) Check() error {
 }
 
 func (x *SendVerifyCodeReq) Check() error {
-	if x.UsedFor < constant.VerificationCodeForRegister || x.UsedFor > constant.VerificationCodeForLogin {
+	if x.UsedFor < constant.VerificationCodeForRegister || x.UsedFor > constant.VerificationCodeForUpdateInfo {
 		return errs.ErrArgs.WrapMsg("usedFor flied is empty")
 	}
 	if x.Email == "" {

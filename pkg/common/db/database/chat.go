@@ -47,6 +47,7 @@ type ChatDatabaseInterface interface {
 	CountVerifyCodeRange(ctx context.Context, account string, start time.Time, end time.Time) (int64, error)
 	AddVerifyCode(ctx context.Context, verifyCode *chatdb.VerifyCode, fn func() error) error
 	UpdateVerifyCodeIncrCount(ctx context.Context, id string) error
+	UpdateVerifyCodeSetUsed(ctx context.Context, id string) error
 	DelVerifyCode(ctx context.Context, id string) error
 	RegisterUser(ctx context.Context, register *chatdb.Register, account *chatdb.Account, attribute *chatdb.Attribute, credentials []*chatdb.Credential) error
 	LoginRecord(ctx context.Context, record *chatdb.UserLoginRecord, verifyCodeID *string) error
@@ -208,6 +209,10 @@ func (o *ChatDatabase) AddVerifyCode(ctx context.Context, verifyCode *chatdb.Ver
 
 func (o *ChatDatabase) UpdateVerifyCodeIncrCount(ctx context.Context, id string) error {
 	return o.verifyCode.Incr(ctx, id)
+}
+
+func (o *ChatDatabase) UpdateVerifyCodeSetUsed(ctx context.Context, id string) error {
+	return o.verifyCode.SetUsed(ctx, id)
 }
 
 func (o *ChatDatabase) DelVerifyCode(ctx context.Context, id string) error {

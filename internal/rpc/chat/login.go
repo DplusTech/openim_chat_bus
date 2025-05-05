@@ -69,6 +69,25 @@ func (o *chatSvr) SendVerifyCode(ctx context.Context, req *chat.SendVerifyCodeRe
 				return nil, err
 			}
 		}
+	case constant.VerificationCodeForUpdateInfo:
+		if req.Email == "" {
+			if req.AreaCode == "" || req.PhoneNumber == "" {
+				return nil, errs.ErrArgs.WrapMsg("area code or phone number is empty")
+			}
+			if !strings.HasPrefix(req.AreaCode, "+") {
+				req.AreaCode = "+" + req.AreaCode
+			}
+			if _, err := strconv.ParseUint(req.AreaCode[1:], 10, 64); err != nil {
+				return nil, errs.ErrArgs.WrapMsg("area code must be number")
+			}
+			if _, err := strconv.ParseUint(req.PhoneNumber, 10, 64); err != nil {
+				return nil, errs.ErrArgs.WrapMsg("phone number must be number")
+			}
+		} else {
+			if err := chat.EmailCheck(req.Email); err != nil {
+				return nil, errs.ErrArgs.WrapMsg("email must be right")
+			}
+		}
 	case constant.VerificationCodeForLogin, constant.VerificationCodeForResetPassword:
 		if req.Email == "" {
 			_, err := o.Database.TakeAttributeByPhone(ctx, req.AreaCode, req.PhoneNumber)

@@ -374,3 +374,7 @@ dist
 # config files, may contain sensitive informatio
 config/config.yaml
 
+/nodejs_server/api/node_modules
+/build
+/build
+/build
